@@ -9,6 +9,12 @@ import static com.github.javaparser.JavaParser.*;
 import static com.github.javaparser.utils.Utils.EOL;
 import static org.junit.Assert.*;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.io.BufferedWriter;
+
 public class JsonPrinterTest {
     @Test
     public void testWithType() {
@@ -50,5 +56,30 @@ public class JsonPrinterTest {
         CompilationUnit unit = parse(code);
         JsonPrinter printer = new JsonPrinter(true);
         printer.output(unit);
+    }
+
+    @Test
+    public void issue1421() {
+        // Handle multi-line strings in JSON output
+        String code = "/* \n" +
+            "* Some comment\n" +
+            "*/\n" +
+            "public class Test {}";
+        CompilationUnit unit = parse(code);
+        JsonPrinter printer = new JsonPrinter(true);
+        printer.output(unit);
+
+        Writer writer = null;
+        try {
+            writer = new BufferedWriter(new OutputStreamWriter(
+                                                               new FileOutputStream("filename.json"), "utf-8"));
+            writer.write(printer.output(unit));
+            // the created filename.json file still has newline characters in the "content" attribute of
+            // the BlockComment element
+        } catch (IOException ex) {
+            // report
+        } finally {
+            try {writer.close(); } catch (Exception ex) {/*ignore*/}
+        }
     }
 }

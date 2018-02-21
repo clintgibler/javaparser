@@ -69,6 +69,7 @@ public class JsonPrinter {
     }
 
     private static String q(String value) {
+        value = value.replace("\n", "\\\n");
         return "\"" + value.replace("\"", "\\\"") + "\"";
     }
 }
